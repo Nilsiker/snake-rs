@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::seq::{IteratorRandom, SliceRandom};
 
 use crate::{
     core::data::{Board, Positions, SnakeEvent},
@@ -14,14 +15,24 @@ pub fn spawn(
     board: Res<Board>,
     positions: Query<&Positions, With<Snake>>,
 ) {
-    let positions = positions.single();
     if foods.is_empty() {
         let mut rand = rand::thread_rng();
+        let position = match positions.get_single() {
+            Ok(positions) => board
+                .tiles_not_in(&positions.0)
+                .choose(&mut rand)
+                .expect("at least one free space"),
+            Err(_) => board
+                .tiles()
+                .choose(&mut rand)
+                .expect("at least one free space"),
+        };
 
-        let pos = rand::seq::IteratorRandom::choose(board.tiles_not_in(&positions.0), &mut rand)
-            .expect("at least one free space");
-
-        commands.spawn((Food, Glyph(GLYPH_FOOD, Color::RED), Positions(vec![*pos])));
+        commands.spawn((
+            Food,
+            Glyph(GLYPH_FOOD, Color::RED),
+            Positions(vec![*position]),
+        ));
     }
 }
 

@@ -17,7 +17,10 @@ pub fn input(
 ) {
     for event in events.read() {
         if event.state == ButtonState::Pressed {
-            let snake_direction = snake_direction.single();
+            let Ok(snake_direction) = snake_direction.get_single() else {
+                return;
+            };
+
             match event.key_code {
                 KeyCode::KeyW | KeyCode::ArrowUp
                     if !matches!(*snake_direction, MoveDirection::Down) =>

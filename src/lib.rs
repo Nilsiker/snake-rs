@@ -15,8 +15,8 @@ impl PluginGroup for SnakePlugins {
         PluginGroupBuilder::start::<Self>()
             .add(core::CorePlugin)
             .add(rendering::RenderPlugin)
-            .add(snake::SnakePlugin)
             .add(input::InputPlugin)
+            .add(snake::SnakePlugin)
             .add(food::FoodPlugin)
             .add(score::ScorePlugin)
     }

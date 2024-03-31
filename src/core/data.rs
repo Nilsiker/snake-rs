@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 use bevy::prelude::*;
 
 #[derive(States, Clone, Eq, PartialEq, Hash, Debug)]
@@ -34,8 +36,12 @@ impl Board {
         self.side
     }
 
+    pub fn tiles(&self) -> &[IVec2] {
+        self.tiles.iter().as_slice()
+    }
+
     pub fn tiles_not_in<'a>(&'a self, other: &'a [IVec2]) -> impl Iterator<Item = &'a IVec2> {
-        self.tiles.iter().filter(|tile| !other.contains(tile))
+        self.tiles.iter().filter(move |tile| !other.contains(tile))
     }
 }
 

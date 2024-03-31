@@ -50,11 +50,14 @@ pub fn render_start_screen(mut terminal: Query<&mut Terminal>) {
     terminal.put_string(prompt_pos, prompt);
 }
 
-pub fn render_game_over(mut terminal: Query<&mut Terminal>, score: Res<Score>) {
+pub fn render_game_over(mut terminal: Query<&mut Terminal>, score: Option<Res<Score>>) {
     let mut terminal = terminal.single_mut();
-    let score = score.0;
 
-    let title = format!("YOUR SCORE: {score}");
+    let title = match score {
+        Some(score) => format!("YOUR SCORE: {}", score.0),
+        None => "YOU LOST!".to_string(),
+    };
+
     let prompt = "Press start to play again".to_string();
 
     let title_offset: i32 = title.len() as i32 / 2;

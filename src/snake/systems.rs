@@ -29,11 +29,14 @@ pub fn despawn(mut commands: Commands, snake: Query<Entity, With<Snake>>) {
 pub fn update_direction(
     mut reader: EventReader<TickEvent>,
     mut snake: Query<&mut MoveDirection, With<Snake>>,
-    input_dir: Res<MoveDirection>,
+    input_dir: Option<Res<MoveDirection>>,
 ) {
+    let Some(new_dir) = input_dir else {
+        return;
+    };
     for _ in reader.read() {
         let mut dir = snake.single_mut();
-        *dir = input_dir.clone();
+        *dir = new_dir.clone();
     }
 }
 

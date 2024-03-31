@@ -10,13 +10,18 @@ pub fn reset_score(mut score: ResMut<Score>) {
 }
 
 pub fn increase_score(mut score: ResMut<Score>, mut reader: EventReader<SnakeEvent>) {
-    if reader.read().any(|ev| matches!(*ev, SnakeEvent::Crashed)) {
+    if reader
+        .read()
+        .any(|ev| matches!(*ev, SnakeEvent::FoodConsumed(_)))
+    {
         score.0 += 10;
     }
 }
 
 pub fn render_score(mut terminal: Query<&mut Terminal>, score: Res<Score>) {
-    let mut terminal = terminal.single_mut();
+    let Ok(mut terminal) = terminal.get_single_mut() else {
+        return;
+    };
 
     terminal
         .border_mut()
