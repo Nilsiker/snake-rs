@@ -1,26 +1,49 @@
 use bevy::prelude::*;
 
-use crate::{game::State, rendering::TERMINAL_SIZE, snake::Position};
+use crate::{game::GameState, rendering::TERMINAL_SIZE, snake::Position};
 
 pub struct FoodPlugin;
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreUpdate, spawn_food.run_if(should_spawn_food));
+        app.add_event::<ConsumedEvent>()
+            .add_systems(Update, spawn.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, respawn)
+            .add_systems(OnEnter(GameState::GameOver), despawn_all);
     }
 }
 
 #[derive(Component)]
 pub struct Food;
 
-fn spawn_food(mut commands: Commands) {
-    println!("spawning food");
-    commands.spawn((Food, Position(get_random_position())));
+#[derive(Event)]
+pub struct ConsumedEvent(pub Entity);
+
+fn spawn(mut commands: Commands, foods: Query<&Food>) {
+    if foods.is_empty() {
+        commands.spawn((Food, Position(get_random_position())));
+    }
 }
 
-fn should_spawn_food(query: Query<&Food>, state: Res<State>) -> bool {
-    query.is_empty() && matches!(*state, State::Playing)
+fn respawn(mut commands: Commands, mut events: EventReader<ConsumedEvent>) {
+    for event in events.read() {
+        commands.entity(event.0).despawn();
+    }
+}
+
+fn despawn_all(mut commands: Commands, query: Query<Entity, With<Food>>) {
+    query
+        .iter()
+        .for_each(|entity| commands.entity(entity).despawn());
 }
 
 fn get_random_position() -> IVec2 {
-    TERMINAL_SIZE.map(|e| e / 3).into()
+    use rand::prelude::*;
+
+    let mut rand = rand::thread_rng();
+    let random_pos = [
+        rand.gen_range(0..TERMINAL_SIZE[0]),
+        rand.gen_range(0..TERMINAL_SIZE[1]),
+    ];
+
+    random_pos.into()
 }
