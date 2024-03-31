@@ -2,11 +2,9 @@ use bevy::prelude::*;
 use bevy_ascii_terminal::prelude::*;
 
 use crate::{
-    food::Food,
     game::GameState,
-    glyphs::{FOOD, SNAKE},
     score::Score,
-    snake::{Position, Snake},
+    snake::{Glyph, Positions},
 };
 
 pub const TERMINAL_SIZE: [i32; 2] = [30, 30];
@@ -19,10 +17,7 @@ impl Plugin for RenderPlugin {
                 PreUpdate,
                 clear_terminal.run_if(in_state(GameState::Playing)),
             )
-            .add_systems(
-                Update,
-                (render_food, render_snake).run_if(in_state(GameState::Playing)),
-            )
+            .add_systems(Update, render_glyphs.run_if(in_state(GameState::Playing)))
             .add_systems(OnEnter(GameState::Start), render_start_screen)
             .add_systems(OnEnter(GameState::GameOver), render_game_over);
     }
@@ -39,25 +34,16 @@ fn clear_terminal(mut terminal: Query<&mut Terminal>) {
     term.clear();
 }
 
-fn render_snake(mut terminal: Query<&mut Terminal>, snake: Query<&Snake>) {
-    let snake = snake.single();
+fn render_glyphs(mut terminal: Query<&mut Terminal>, query: Query<(&Positions, &Glyph)>) {
     let mut terminal = terminal.single_mut();
     let mut bounds = terminal.bounds();
     bounds = bounds.translated(TERMINAL_SIZE.map(|e| e / 2));
-
-    snake
-        .tiles()
-        .iter()
-        .filter(|pos| bounds.contains(**pos))
-        .for_each(|pos| terminal.put_char(*pos, SNAKE.fg(Color::GREEN)));
-}
-
-fn render_food(query: Query<&Position, With<Food>>, mut terminal: Query<&mut Terminal>) {
-    let mut terminal = terminal.single_mut();
-
-    query
-        .iter()
-        .for_each(|food| terminal.put_char(food.0, FOOD.fg(Color::RED)));
+    for (Positions(positions), Glyph(glyph, color)) in &query {
+        positions
+            .iter()
+            .filter(|pos| bounds.contains(**pos))
+            .for_each(|pos| terminal.put_char(*pos, glyph.fg(*color)));
+    }
 }
 
 fn render_start_screen(mut terminal: Query<&mut Terminal>) {

@@ -1,6 +1,12 @@
 use bevy::prelude::*;
+use rand::seq::IteratorRandom;
 
-use crate::{game::GameState, rendering::TERMINAL_SIZE, snake::Position};
+use crate::{
+    board::Board,
+    game::GameState,
+    glyphs,
+    snake::{Glyph, Positions, Snake},
+};
 
 pub struct FoodPlugin;
 impl Plugin for FoodPlugin {
@@ -18,9 +24,21 @@ pub struct Food;
 #[derive(Event)]
 pub struct ConsumedEvent(pub Entity);
 
-fn spawn(mut commands: Commands, foods: Query<&Food>) {
+fn spawn(
+    mut commands: Commands,
+    foods: Query<&Food>,
+    board: Res<Board>,
+    positions: Query<&Positions, With<Snake>>,
+) {
+    let positions = positions.single();
     if foods.is_empty() {
-        commands.spawn((Food, Position(get_random_position())));
+        let mut rand = rand::thread_rng();
+
+        let pos = board
+            .tiles_not_in(&positions.0)
+            .choose(&mut rand)
+            .expect("at least one free space");
+        commands.spawn((Food, Glyph(glyphs::FOOD, Color::RED), Positions(vec![*pos])));
     }
 }
 
@@ -34,16 +52,4 @@ fn despawn_all(mut commands: Commands, query: Query<Entity, With<Food>>) {
     query
         .iter()
         .for_each(|entity| commands.entity(entity).despawn());
-}
-
-fn get_random_position() -> IVec2 {
-    use rand::prelude::*;
-
-    let mut rand = rand::thread_rng();
-    let random_pos = [
-        rand.gen_range(0..TERMINAL_SIZE[0]),
-        rand.gen_range(0..TERMINAL_SIZE[1]),
-    ];
-
-    random_pos.into()
 }

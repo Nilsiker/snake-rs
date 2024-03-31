@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::board::Board;
+
 #[derive(States, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum GameState {
     Start,
@@ -13,6 +15,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Start)
+            .insert_resource(Board::new())
             .add_event::<CrashEvent>()
             .add_systems(Update, check_start.run_if(in_state(GameState::Start)))
             .add_systems(Update, check_start.run_if(in_state(GameState::GameOver)))

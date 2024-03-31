@@ -1,3 +1,6 @@
+#![allow(clippy::type_complexity)]
+
+mod board;
 mod food;
 mod game;
 mod glyphs;
