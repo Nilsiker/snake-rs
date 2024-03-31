@@ -9,6 +9,7 @@ struct TickTimer(Timer);
 pub struct TickPlugin {
     ms: usize,
 }
+
 impl Plugin for TickPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TickEvent>()

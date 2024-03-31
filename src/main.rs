@@ -11,7 +11,7 @@ use tick::TickPlugin;
 fn main() {
     let tick_ms = match std::env::var("TICK") {
         Ok(value) => value.parse().expect("parseable usize"),
-        Err(_) => 200,
+        Err(_) => 120,
     };
     App::new()
         .add_plugins((
