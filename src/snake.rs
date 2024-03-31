@@ -4,9 +4,8 @@ use bevy::{
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
 };
-use bevy_ascii_terminal::Terminal;
 
-use crate::{rendering::TERMINAL_SIZE, tick::TickEvent};
+use crate::{game::in_playing_state, rendering::TERMINAL_SIZE, tick::TickEvent};
 
 #[derive(Component)]
 pub struct Snake {
@@ -16,25 +15,22 @@ pub struct Snake {
 
 impl Default for Snake {
     fn default() -> Self {
+        let start_tile: IVec2 = (TERMINAL_SIZE.map(|e| e / 2)).into();
         Self {
-            size: 5,
-            tiles_occupied: Default::default(),
+            size: 1,
+            tiles_occupied: VecDeque::from(vec![start_tile]),
         }
     }
 }
 
 impl Snake {
-    pub fn size(&self) -> usize {
-        self.size
-    }
-
     pub fn tiles(&self) -> &VecDeque<IVec2> {
         &self.tiles_occupied
     }
 }
 
 #[derive(Component)]
-pub struct Position(IVec2);
+pub struct Position(pub IVec2);
 
 #[derive(Component)]
 pub enum Direction {
@@ -58,29 +54,16 @@ impl From<&Direction> for IVec2 {
 pub struct SnakePlugin;
 impl Plugin for SnakePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_snake)
-            .add_systems(Update, (render_snake, move_snake, change_direction));
+        app.add_systems(Startup, spawn_snake).add_systems(
+            Update,
+            (move_snake, change_direction).run_if(in_playing_state),
+        );
     }
 }
 
 fn spawn_snake(mut commands: Commands) {
     let pos = IVec2::new(TERMINAL_SIZE[0] / 2, TERMINAL_SIZE[1] / 2);
     commands.spawn((Snake::default(), Position(pos), Direction::Up));
-}
-
-fn render_snake(mut terminal: Query<&mut Terminal>, snake: Query<&Snake>) {
-    let snake = snake.single();
-    let mut terminal = terminal.single_mut();
-    let mut bounds = terminal.bounds();
-    bounds = bounds.translated(TERMINAL_SIZE.map(|e| e / 2));
-
-    terminal.clear();
-
-    snake
-        .tiles()
-        .iter()
-        .filter(|pos| bounds.contains(**pos))
-        .for_each(|pos| terminal.put_char(*pos, '█'));
 }
 
 fn move_snake(

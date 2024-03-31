@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.13.1"
 bevy_ascii_terminal = "0.15.0"
+rand = "0.8.5"
 
 [profile.release]
 strip = true
