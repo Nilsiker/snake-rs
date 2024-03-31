@@ -1,43 +1,28 @@
 use bevy::prelude::*;
-use bevy_ascii_terminal::prelude::*;
+use bevy_ascii_terminal::*;
 
 use crate::{
-    game::GameState,
-    score::Score,
-    snake::{Glyph, Positions},
+    core::data::{Board, Positions},
+    score::data::Score,
 };
 
-pub const TERMINAL_SIZE: [i32; 2] = [30, 30];
+use super::data::Glyph;
 
-pub struct RenderPlugin;
-impl Plugin for RenderPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_terminal)
-            .add_systems(
-                PreUpdate,
-                clear_terminal.run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(Update, render_glyphs.run_if(in_state(GameState::Playing)))
-            .add_systems(OnEnter(GameState::Start), render_start_screen)
-            .add_systems(OnEnter(GameState::GameOver), render_game_over);
-    }
-}
-
-fn setup_terminal(mut commands: Commands) {
-    let terminal = Terminal::new(TERMINAL_SIZE).with_border(Border::single_line());
+pub fn setup_terminal(mut commands: Commands, board: Res<Board>) {
+    let terminal = Terminal::new([board.side(), board.side()]).with_border(Border::single_line());
     commands.spawn((TerminalBundle::from(terminal), AutoCamera));
 }
 
-fn clear_terminal(mut terminal: Query<&mut Terminal>) {
+pub fn clear_terminal(mut terminal: Query<&mut Terminal>) {
     let mut term = terminal.single_mut();
 
     term.clear();
 }
 
-fn render_glyphs(mut terminal: Query<&mut Terminal>, query: Query<(&Positions, &Glyph)>) {
+pub fn render_glyphs(query: Query<(&Positions, &Glyph)>, mut terminal: Query<&mut Terminal>) {
     let mut terminal = terminal.single_mut();
     let mut bounds = terminal.bounds();
-    bounds = bounds.translated(TERMINAL_SIZE.map(|e| e / 2));
+    bounds = bounds.translated([terminal.width() / 2, terminal.height() / 2]);
     for (Positions(positions), Glyph(glyph, color)) in &query {
         positions
             .iter()
@@ -46,7 +31,7 @@ fn render_glyphs(mut terminal: Query<&mut Terminal>, query: Query<(&Positions, &
     }
 }
 
-fn render_start_screen(mut terminal: Query<&mut Terminal>) {
+pub fn render_start_screen(mut terminal: Query<&mut Terminal>) {
     let mut terminal = terminal.single_mut();
     let title = "SNAKE-RS".to_string();
     let prompt = "Press start to play".to_string();
@@ -54,10 +39,10 @@ fn render_start_screen(mut terminal: Query<&mut Terminal>) {
     let title_offset: i32 = title.len() as i32 / 2;
     let prompt_offset: i32 = prompt.len() as i32 / 2;
 
-    let mut title_pos = TERMINAL_SIZE.map(|e| e / 2);
+    let mut title_pos = IVec2::new(terminal.width() as i32 / 2, terminal.height() as i32 / 2);
     title_pos[1] += 1;
     title_pos[0] -= title_offset;
-    let mut prompt_pos = TERMINAL_SIZE.map(|e| e / 2);
+    let mut prompt_pos = IVec2::new(terminal.width() as i32 / 2, terminal.height() as i32 / 2);
     prompt_pos[1] -= 1;
     prompt_pos[0] -= prompt_offset;
 
@@ -65,7 +50,7 @@ fn render_start_screen(mut terminal: Query<&mut Terminal>) {
     terminal.put_string(prompt_pos, prompt);
 }
 
-fn render_game_over(mut terminal: Query<&mut Terminal>, score: Res<Score>) {
+pub fn render_game_over(mut terminal: Query<&mut Terminal>, score: Res<Score>) {
     let mut terminal = terminal.single_mut();
     let score = score.0;
 
@@ -75,10 +60,10 @@ fn render_game_over(mut terminal: Query<&mut Terminal>, score: Res<Score>) {
     let title_offset: i32 = title.len() as i32 / 2;
     let prompt_offset: i32 = prompt.len() as i32 / 2;
 
-    let mut title_pos = TERMINAL_SIZE.map(|e| e / 2);
+    let mut title_pos = IVec2::new(terminal.width() as i32 / 2, terminal.height() as i32 / 2);
     title_pos[1] += 1;
     title_pos[0] -= title_offset;
-    let mut prompt_pos = TERMINAL_SIZE.map(|e| e / 2);
+    let mut prompt_pos = IVec2::new(terminal.width() as i32 / 2, terminal.height() as i32 / 2);
     prompt_pos[1] -= 1;
     prompt_pos[0] -= prompt_offset;
 
